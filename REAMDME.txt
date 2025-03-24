@@ -16,7 +16,9 @@ I have ReactQuery for state management
 How to run the code
 
 step 1:Please install the node_module by using the command : npm install
-step 2: Then just write the command on vscode to run the project: npm start
+step 2:please uninstall the appwrite by using the command :npm uninstall appwrite
+step 3:please install the appwrite by using the command:npm i appwrite
+step 4: Then just write the command on vscode to run the project: npm start
 user can click on the Calender to create an event.Event will be reflected below under upcoming event table
 Here user can update and delete events
 
