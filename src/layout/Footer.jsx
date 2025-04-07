@@ -26,21 +26,9 @@ const Footer = () => {
                 "&:hover": { color: "#D7CCC8" }, // Light brown hover effect
               }}
             >
-              Home
+          Calendar
             </Typography>
-            <Typography
-              component={Link}
-              href="/calendar"
-              sx={{
-                color: "inherit",
-                textDecoration: "none",
-                fontSize: "1rem",
-                fontWeight: "bold",
-                "&:hover": { color: "#D7CCC8" },
-              }}
-            >
-              Calendar
-            </Typography>
+         
             <Typography
               component={Link}
               href="/about"

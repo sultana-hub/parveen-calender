@@ -145,28 +145,11 @@ const Calendar = () => {
         setEditMode(false);
         setOpen(true);
         setSelectedDate(selectInfo.startStr.split("T")[0]);
+        setFormErrors({});
 
     };
 
-    // const handleDateSelect = (selectInfo) => {
-    //     const selectedDateStr = selectInfo.startStr.split("T")[0];
-
-    //     let myEvent={
-    //         title: "",
-    //         event_url: "",
-    //         start_date: selectedDateStr,
-    //         start_time: "12:00",
-    //         end_date: selectedDateStr,
-    //         end_time: "13:00",
-    //         color: "#3788d8"
-    //     };
-    //     setEvents1((prev) => [...prev, myEvent])
-    //     setEditMode(false);
-    //     setOpen(true);
-    //     setSelectedDate(selectedDateStr);
-
-    //     // setHighlightedDates((prev) => new Set([...prev, selectedDateStr]));
-    // };
+  
 
 
 
@@ -193,16 +176,55 @@ const Calendar = () => {
         });
 
         setOpen(true);
+        setFormErrors({});
     };
 
 
     // Handle form submission (Add or Update)
-    const handleSubmit = () => {
-        if (!newEvent.title || !newEvent.start_date || !newEvent.start_time || !newEvent.end_date || !newEvent.end_time) {
-            alert("Please fill all fields.");
-            return;
+    const [formErrors, setFormErrors] = useState({});
+    const validateForm = () => {
+        const errors = {};
+    
+        if (!newEvent.title.trim()) errors.title = "Title is required";
+        if (!newEvent.start_date) errors.start_date = "Start date is required";
+        if (!newEvent.start_time) errors.start_time = "Start time is required";
+        if (!newEvent.end_date) errors.end_date = "End date is required";
+        if (!newEvent.end_time) errors.end_time = "End time is required";
+    
+        if (newEvent.start_date && newEvent.end_date) {
+            const startDate = new Date(newEvent.start_date);
+            const endDate = new Date(newEvent.end_date);
+    
+            if (endDate < startDate) {
+                errors.end_date = "End date cannot be before start date";
+            } else if (endDate.getTime() === startDate.getTime()) {
+                // Dates are equal, so check time
+                const startTime = newEvent.start_time;
+                const endTime = newEvent.end_time;
+    
+                if (startTime && endTime && endTime <= startTime) {
+                    errors.end_time = "End time must be after start time when on the same date";
+                }
+            }
         }
+    
+        // Optional: URL validation
+        if (newEvent.event_url && !/^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/.test(newEvent.event_url)) {
+            errors.event_url = "Enter a valid URL (e.g., https://example.com)";
+        }
+    
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+    
+    
 
+    const handleSubmit = () => {
+        // if (!newEvent.title || !newEvent.start_date || !newEvent.start_time || !newEvent.end_date || !newEvent.end_time) {
+        //     alert("Please fill all fields.");
+        //     return;
+        // }
+        if (!validateForm()) return;
         // Ensure color is assigned a default if not set
         if (!newEvent.color) {
             newEvent.color = "#000000"; // Default black if no color is chosen
@@ -213,21 +235,6 @@ const Calendar = () => {
             addEventMutation.mutate(newEvent);
         }
     };
-
-
-    // Highlight the selected date dynamically with user input
-    // const highlightedEvent = selectedDate
-    //     ? [{
-    //         title: newEvent.title || "Selected Date", // Update dynamically
-    //         start: selectedDate,
-    //         backgroundColor: "#FF5733",
-    //         display: "background"
-    //     }]
-    //     : [];
-
-
-
-
 
 
 
@@ -249,7 +256,7 @@ const Calendar = () => {
                         }}
                         selectable
                         select={handleDateSelect}
-                        // dayCellDidMount={highlightSelectedDates} // Highlights selected dates
+                        // dayCellDidMount={highlightedEvent} // Highlights selected dates
                         events={events}
                         eventClick={handleEventClick}
                         editable
@@ -326,19 +333,55 @@ const Calendar = () => {
             <Dialog open={open} onClose={() => setOpen(false)}>
                 <DialogTitle>{editMode ? "Edit Event" : "Add Event"}</DialogTitle>
                 <DialogContent>
-                    <TextField label="Event Title" fullWidth margin="dense" value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} />
+                    <TextField label="Event Title"
+                     fullWidth margin="dense"
+                      value={newEvent.title} 
+                      onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                      error={!!formErrors.title}
+                      helperText={formErrors.title}
+                       />
                     <TextField label="Event URL"
                         fullWidth margin="dense"
                         value={newEvent.event_url}
                         onChange={(e) => setNewEvent({ ...newEvent, event_url: e.target.value })}
+                        error={!!formErrors.event_url}
+                        helperText={formErrors.event_url}
                         InputProps={{
                             startAdornment: <LinkIcon color="action" />, // 🔗 Icon as label
                         }}
                     />
-                    <TextField type="date" fullWidth margin="dense" value={newEvent.start_date} onChange={(e) => setNewEvent({ ...newEvent, start_date: e.target.value })} />
-                    <TextField type="time" fullWidth margin="dense" value={newEvent.start_time} onChange={(e) => setNewEvent({ ...newEvent, start_time: e.target.value })} />
-                    <TextField type="date" fullWidth margin="dense" value={newEvent.end_date} onChange={(e) => setNewEvent({ ...newEvent, end_date: e.target.value })} />
-                    <TextField type="time" fullWidth margin="dense" value={newEvent.end_time} onChange={(e) => setNewEvent({ ...newEvent, end_time: e.target.value })} />
+                    <TextField label="Start Date"
+                     type="date" fullWidth
+                      margin="dense" 
+                      value={newEvent.start_date} 
+                      onChange={(e) => setNewEvent({ ...newEvent, start_date: e.target.value })}
+                      error={!!formErrors.start_date}
+                      helperText={formErrors.start_date}
+                       />
+                    <TextField label="Start Time"  
+                    type="time" fullWidth
+                     margin="dense" 
+                     value={newEvent.start_time} 
+                     onChange={(e) => setNewEvent({ ...newEvent, start_time: e.target.value })} 
+                     error={!!formErrors.start_time}
+                     helperText={formErrors.start_time}
+                     />
+                    <TextField label="End Date" 
+                     type="date" fullWidth
+                      margin="dense"
+                       value={newEvent.end_date} 
+                       onChange={(e) => setNewEvent({ ...newEvent, end_date: e.target.value })} 
+                       error={!!formErrors.end_date}
+                       helperText={formErrors.end_date}
+                       />
+                    <TextField label="End Time" 
+                     type="time" fullWidth
+                      margin="dense"
+                       value={newEvent.end_time}
+                        onChange={(e) => setNewEvent({ ...newEvent, end_time: e.target.value })} 
+                        error={!!formErrors.end_time}
+                        helperText={formErrors.end_time}
+                        />
                     <TextField
                         type="color"
                         fullWidth
